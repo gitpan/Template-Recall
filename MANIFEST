@@ -1,0 +1,8 @@
+Changes
+Makefile.PL
+MANIFEST
+README
+t/Template-Recall.t
+lib/Template/Recall.pm
+lib/Template/Recall/Base.pm
+META.yml                                 Module meta-data (added by MakeMaker)
