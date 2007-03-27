@@ -6,8 +6,7 @@ use warnings;
 
 use base qw(Template::Recall::Base);
 
-our $VERSION='0.02';
-
+our $VERSION='0.03';
 
 
 sub new {
@@ -16,15 +15,16 @@ sub new {
 	my $class = shift;
 	my $self = {};
 
-	my ( $template_path, %h ) = @_;
+	my ( %h ) = @_;
 
 
 	# Set default values
 	$self->{'is_file_template'} = 0;
 	$self->{'template_flavor'} = qr/html$|htm$/i;
-	$self->{'template_secpat'} = qr/<\%\s*RECALLSEC_\w+\s*\%>/;		# Section pattern
+	$self->{'template_secpat'} = qr/<%\s*=+\s*\w+\s*=+\s*%>/;		# Section pattern
+	$self->{'delims'} = [ '<%', '%>' ];
 
-
+	
 
 	bless( $self, $class );
 
@@ -35,19 +35,28 @@ sub new {
 
 
 	# User defines section pattern
-	$self->{'template_secpat'} = $h{'secpat'} if defined( $h{'secpat'} ); 
+	$self->{'template_secpat'} = qr/$h{'secpat'}/ if defined( $h{'secpat'} ); 
+
+
+
+	# User sets 'no delimiters'
+	$self->{'delims'} = undef if defined($h{'delims'}) and !ref($h{'delims'});
+		
+	# User specifies delimiters
+	$self->{'delims'} = [ @{ $h{'delims'} } ] if defined($h{'delims'}) and ref($h{'delims'});
+
 
 
 	# Check the path
-	$self->{'template_path'} = '.' if ( not defined($template_path) or !-e $template_path );		# Default is local dir
+	$self->{'template_path'} = '.' if ( not defined($h{'template_path'}) or !-e $h{'template_path'} );		# Default is local dir
 
 
 
 	# Single file template:
 
-	if ( defined($template_path) and -f $template_path ) {
+	if ( defined($h{'template_path'} ) and -f $h{'template_path'} ) {
 
-		$self->{'template_path'} = $template_path;
+		$self->{'template_path'} = $h{'template_path'};
 		$self->{'is_file_template'} = 1;	# true
 
 		$self->init_file_template();
@@ -55,9 +64,9 @@ sub new {
 		return $self;
 
 	}
-	elsif ( defined($template_path) and -d $template_path ) {		# It's a directory
+	elsif ( defined($h{'template_path'}) and -d $h{'template_path'} ) {		# It's a directory
 
-		$self->{'template_path'} = $template_path;
+		$self->{'template_path'} = $h{'template_path'};
 
 	}
 
@@ -71,7 +80,9 @@ sub new {
 
 	opendir(DIR, $self->{'template_path'}) || die "Can't open $self->{'template_path'} $!";
 	$self->{'template_files'} = 
-		[ map { "$self->{'template_path'}/$_" } grep { /$self->{'template_flavor'}/ && -f "$self->{'template_path'}/$_" } readdir(DIR) ];
+		[	map { "$self->{'template_path'}/$_" } 
+			grep { /$self->{'template_flavor'}/ && -f "$self->{'template_path'}/$_" } 
+			readdir(DIR) ];
 	closedir(DIR);
 
 	return $self;
@@ -79,6 +90,7 @@ sub new {
 
 
 } # new()
+
 
 
 
@@ -112,7 +124,7 @@ sub render {
 
 	if ( defined($self->{'preloaded'}{$tpattern}) ) {
 
-		return $self->SUPER::render( $self->{'preloaded'}{$tpattern}, \%h );
+		return $self->SUPER::render( $self->{'preloaded'}{$tpattern}, \%h, $self->{'delims'} );
 
 	}
 
@@ -134,7 +146,7 @@ sub render {
 		while(<F>) { $t .= $_; }
 		close(F);
 		
-		return $self->SUPER::render( $t, \%h );
+		return $self->SUPER::render( $t, \%h, $self->{'delims'} );
 
 	}
 
@@ -162,7 +174,7 @@ sub render_file {
 
 			return $retval if ( not ref($hash_ref) ); # Return template untouched
 
-			return $self->SUPER::render( $retval, $hash_ref );
+			return $self->SUPER::render( $retval, $hash_ref, $self->{'delims'} );	
 			
 		}
 
@@ -254,7 +266,7 @@ Template::Recall - "Reverse callback" templating system
 	
 	use Template::Recall;
 
-	my $tr = Template::Recall->new( '/path/to/template/sections' );
+	my $tr = Template::Recall->new( template_path => '/path/to/template/sections' );
 
 	my @prods = (
 		'soda,sugary goodness,$.99', 
@@ -273,9 +285,9 @@ Template::Recall - "Reverse callback" templating system
 		my %h;
 		my @a = split(/,/, $_);
 
-		$h{'TEMPLATE_var_product'} = $a[0];
-		$h{'TEMPLATE_var_description'} = $a[1];
-		$h{'TEMPLATE_var_price'} = $a[2];
+		$h{'product'} = $a[0];
+		$h{'description'} = $a[1];
+		$h{'price'} = $a[2];
 
 		print $tr->render('prodrow', %h);
 	}
@@ -290,12 +302,12 @@ Template::Recall - "Reverse callback" templating system
 
 Template::Recall works using what I call a "reverse callback" approach. A "callback" templating system (i.e. Mason, Apache::ASP) generally includes template markup and code in the same file. The template "calls" out to the code where needed. Template::Recall works in reverse. Rather than inserting code inside the template, the template remains separate, but broken into sections. The sections are called from within the code at the appropriate times.
 
-A template section is merely a file on disk (or a "marked" section in a single file). For instance, 'prodrow' above (actually F<prodrow.html> in the template directory), looks like
+A template section is merely a file on disk (or a "marked" section in a single file). For instance, 'prodrow' above (actually F<prodrow.html> in the template directory), might look like
 
 	<tr>
-		<td>TEMPLATE_var_product</td>
-		<td>TEMPLATE_var_description</td>
-		<td>TEMPLATE_var_price</td>
+		<td><% product %></td>
+		<td><% description %></td>
+		<td><%price%></td>
 	</tr>
 
 The C<render()> method is used to "call" out to the template sections. Simply create a hash of name/value pairs that represent the template tags you wish to replace, and pass it along with the template section, i.e.
@@ -304,29 +316,29 @@ The C<render()> method is used to "call" out to the template sections. Simply cr
 
 =head1 METHODS
 
-=head3 C<new( [$template_path] [, flavor =E<gt> $template_flavor] [, secpat=E<gt> $section_pattern ] )>
+=head3 C<new( [template_path =E<gt> $path ] [, flavor =E<gt> $template_flavor] [, secpat =E<gt> $section_pattern ] [, delims =E<gt> ['opening', 'closing' ] ] )>
 
-Instantiates the object. If you do not specify C<$template_path>, it will assume the diretory that the script lives in. If C<$template_path> points to a file rather than a directory, it loads all the template sections from this file. The file must be sectioned using the "section pattern", which can be adjusted via C<secpat>.
+Instantiates the object. If you do not specify C<template_path>, it will assume templates are in the diretory that the script lives in. If C<template_path> points to a file rather than a directory, it loads all the template sections from this file. The file must be sectioned using the "section pattern", which can be adjusted via C<secpat>.
 
 C<flavor> is a pattern to specify what type of template to load. This is C</html$|htm$/i> by default, which picks up HTML file extensions. You could set it to C</xml$/i>, for instance, to get *.xml files.
 
-C<secpat>, by default, is C</E<lt>%\s*RECALLSEC_\w+\s*%E<gt>/>. So if you put all your template sections in one file, the way Template::Recall knows where to get the sections is via this pattern, e.g.
+C<secpat>, by default, is C</E<lt>%\s*=+\s*\w+\s*=+\s*%E<gt>/>. So if you put all your template sections in one file, the way Template::Recall knows where to get the sections is via this pattern, e.g.
 
-	<% RECALLSEC_header %>
+	<% ==================== header ==================== %>
 	<html
 		<head><title>Untitled</title></head>
 	<body>
 
 	<table>
 
-	<% RECALLSEC_prodrow %>
+	<% ==================== prodrow ==================== %>
 	<tr>
-		<td>TEMPLATE_var_product</td>
-		<td>TEMPLATE_var_description</td>
-		<td>TEMPLATE_var_price</td>
+		<td><% product %></td>
+		<td><% description %></td>
+		<td><% price %></td>
 	</tr>
 	
-	<% RECALLSEC_footer %>
+	<% ==================== footer ==================== %>
 	
 	</table>
 
@@ -334,6 +346,12 @@ C<secpat>, by default, is C</E<lt>%\s*RECALLSEC_\w+\s*%E<gt>/>. So if you put al
 	</html>
 
 You may set C<secpat> to any pattern you wish.	
+
+The default delimeters for Template::Recall are C<E<lt>%> (opening) and C<%E<gt>> (closing). This tells Template::Recall that C<E<lt>% price %E<gt>> is different from "price" in the same template, e.g.
+
+	What is the price? It's <% price %>
+
+You can change C<delims> by passing a two element array to C<new()> representing the opening and closing delimiters, such as C<delims =E<gt> [ '(%', '%)' ]>. If you don't want to use delimiters at all, simply set C<delims =E<gt> 'none'>.
 
 =head3 C<render( $template_pattern [, %hash_of_replacements ] );>
 
