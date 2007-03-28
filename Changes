@@ -1,5 +1,43 @@
 Revision history for Perl extension Template::Recall.
 
+
+Revision: 39
+Author: jarobson
+Date: 10:21:02 AM, Wednesday, March 28, 2007
+Message:
+Updated version after Base.pm fix
+----
+Modified : /Template-Recall/Recall.pm
+
+
+Revision: 30
+Author: jarobson
+Date: 11:26:42 AM, Friday, March 23, 2007
+Message:
+new() requires hash params, i.e. 'name' => 'value'. Updated docs
+----
+Modified : /Template-Recall/Recall.pm
+
+Revision: 38
+Author: jarobson
+Date: 10:20:35 AM, Wednesday, March 28, 2007
+Message:
+Problem with delimiter regex. Assigned pattern to variable first, then used.
+----
+Modified : /Template-Recall/Recall/Base.pm
+
+
+Revision: 36
+Author: jarobson
+Date: 9:55:02 AM, Tuesday, March 27, 2007
+Message:
+Enforce $delims paramater: must be two element array reference, or is ignored.
+----
+Modified : /Template-Recall/Recall/Base.pm
+
+
+
+
 0.01  Tue Mar 20 15:28:02 2007
 	- original version; created by h2xs 1.23 with options
 		-X -n Template::Recall

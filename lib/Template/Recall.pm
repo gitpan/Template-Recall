@@ -6,7 +6,7 @@ use warnings;
 
 use base qw(Template::Recall::Base);
 
-our $VERSION='0.03';
+our $VERSION='0.04';
 
 
 sub new {
