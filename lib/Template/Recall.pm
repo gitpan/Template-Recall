@@ -6,7 +6,7 @@ use warnings;
 
 use base qw(Template::Recall::Base);
 
-our $VERSION='0.04';
+our $VERSION='0.05';
 
 
 sub new {
@@ -170,9 +170,9 @@ sub render_file {
 
 		if ( $template_secs[$i] =~ /$tpattern/ ) {
 
-			$retval = $template_secs[$i+1];
+			return $template_secs[$i+1] if ( not ref($hash_ref) ); # Return template untouched
 
-			return $retval if ( not ref($hash_ref) ); # Return template untouched
+			$retval = $template_secs[$i+1]; # Make copy -- necessary
 
 			return $self->SUPER::render( $retval, $hash_ref, $self->{'delims'} );	
 			
@@ -181,7 +181,7 @@ sub render_file {
 	}
 
 
-	return 0;
+	return;
 
 } # render_file()
 
