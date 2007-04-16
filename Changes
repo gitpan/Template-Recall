@@ -1,44 +1,69 @@
-Revision history for Perl extension Template::Recall.
+Recall.pm SVN log: 
+------------------------------------------------------------------------
+r46 | jarobson | 2007-04-13 12:45:24 -0600 (Fri, 13 Apr 2007) | 1 line
 
+Added delimiter options to secpat
+------------------------------------------------------------------------
+r43 | jarobson | 2007-04-03 11:37:03 -0600 (Tue, 03 Apr 2007) | 1 line
 
-Revision: 39
-Author: jarobson
-Date: 10:21:02 AM, Wednesday, March 28, 2007
-Message:
+Fixed email address in POD
+------------------------------------------------------------------------
+r42 | jarobson | 2007-03-29 09:31:44 -0600 (Thu, 29 Mar 2007) | 1 line
+
+Version increment.
+------------------------------------------------------------------------
+r40 | jarobson | 2007-03-29 09:30:26 -0600 (Thu, 29 Mar 2007) | 1 line
+
+Removed unnecessary variable assignment.
+------------------------------------------------------------------------
+r39 | jarobson | 2007-03-28 10:21:02 -0600 (Wed, 28 Mar 2007) | 1 line
+
 Updated version after Base.pm fix
-----
-Modified : /Template-Recall/Recall.pm
+------------------------------------------------------------------------
+r30 | jarobson | 2007-03-23 11:26:42 -0600 (Fri, 23 Mar 2007) | 1 line
 
-
-Revision: 30
-Author: jarobson
-Date: 11:26:42 AM, Friday, March 23, 2007
-Message:
 new() requires hash params, i.e. 'name' => 'value'. Updated docs
-----
-Modified : /Template-Recall/Recall.pm
+------------------------------------------------------------------------
+r29 | jarobson | 2007-03-22 15:11:41 -0600 (Thu, 22 Mar 2007) | 1 line
 
-Revision: 38
-Author: jarobson
-Date: 10:20:35 AM, Wednesday, March 28, 2007
-Message:
+Modified section pattern, added delimters, plus logic to shut them off.
+------------------------------------------------------------------------
+r27 | jarobson | 2007-03-21 09:44:53 -0600 (Wed, 21 Mar 2007) | 1 line
+
+Version inc. 0.01->0.02
+------------------------------------------------------------------------
+r25 | jarobson | 2007-03-21 09:42:32 -0600 (Wed, 21 Mar 2007) | 1 line
+
+Initial Import - name from Recall::Template to Template::Recall
+------------------------------------------------------------------------
+=============================================================================== 
+Base.pm 
+------------------------------------------------------------------------
+r41 | jarobson | 2007-03-29 09:31:30 -0600 (Thu, 29 Mar 2007) | 1 line
+
+Version number increment.
+------------------------------------------------------------------------
+r38 | jarobson | 2007-03-28 10:20:35 -0600 (Wed, 28 Mar 2007) | 1 line
+
 Problem with delimiter regex. Assigned pattern to variable first, then used.
-----
-Modified : /Template-Recall/Recall/Base.pm
+------------------------------------------------------------------------
+r36 | jarobson | 2007-03-27 09:55:02 -0600 (Tue, 27 Mar 2007) | 1 line
 
-
-Revision: 36
-Author: jarobson
-Date: 9:55:02 AM, Tuesday, March 27, 2007
-Message:
 Enforce $delims paramater: must be two element array reference, or is ignored.
-----
-Modified : /Template-Recall/Recall/Base.pm
+------------------------------------------------------------------------
+r31 | jarobson | 2007-03-23 12:39:29 -0600 (Fri, 23 Mar 2007) | 1 line
 
+Removed unnecessary assignment for delimiters.
+------------------------------------------------------------------------
+r28 | jarobson | 2007-03-22 15:10:39 -0600 (Thu, 22 Mar 2007) | 1 line
 
+Added $delims parameter and logic to render()
+------------------------------------------------------------------------
+r26 | jarobson | 2007-03-21 09:44:35 -0600 (Wed, 21 Mar 2007) | 1 line
 
+Incremented version 0.01->0.02
+------------------------------------------------------------------------
+r25 | jarobson | 2007-03-21 09:42:32 -0600 (Wed, 21 Mar 2007) | 1 line
 
-0.01  Tue Mar 20 15:28:02 2007
-	- original version; created by h2xs 1.23 with options
-		-X -n Template::Recall
-
+Initial Import - name from Recall::Template to Template::Recall
+------------------------------------------------------------------------

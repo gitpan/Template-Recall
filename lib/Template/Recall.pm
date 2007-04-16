@@ -6,7 +6,7 @@ use warnings;
 
 use base qw(Template::Recall::Base);
 
-our $VERSION='0.05';
+our $VERSION='0.06';
 
 
 sub new {
@@ -22,6 +22,7 @@ sub new {
 	$self->{'is_file_template'} = 0;
 	$self->{'template_flavor'} = qr/html$|htm$/i;
 	$self->{'template_secpat'} = qr/<%\s*=+\s*\w+\s*=+\s*%>/;		# Section pattern
+	$self->{'secpat_delims'} = [ '<%\s*=+\s*', '\s*=+\s*%>' ];	# Section delimiters
 	$self->{'delims'} = [ '<%', '%>' ];
 
 	
@@ -37,6 +38,13 @@ sub new {
 	# User defines section pattern
 	$self->{'template_secpat'} = qr/$h{'secpat'}/ if defined( $h{'secpat'} ); 
 
+
+	# Section: User sets 'no delimiters'
+	$self->{'secpat_delims'} = undef if defined($h{'secpat_delims'}) and !ref($h{'secpat_delims'});
+		
+	# Section: User specifies delimiters
+	$self->{'secpat_delims'} = [ @{ $h{'secpat_delims'} } ] if defined($h{'secpat_delims'}) and ref($h{'secpat_delims'});
+	
 
 
 	# User sets 'no delimiters'
@@ -164,10 +172,21 @@ sub render_file {
 
 	my $retval;
 
+
+	# Handle section pattern delimiters if they are defined
+
+	if ( ref($self->{'secpat_delims'}) ) {
+		$tpattern = 
+			${$self->{'secpat_delims'}}[0] . $tpattern . ${$self->{'secpat_delims'}}[1];
+	}
+
 	my @template_secs = @{ $self->{'template_secs'} };
+
 
 	for ( my $i=0; $i<$#template_secs; $i++ ) {
 
+
+		
 		if ( $template_secs[$i] =~ /$tpattern/ ) {
 
 			return $template_secs[$i+1] if ( not ref($hash_ref) ); # Return template untouched
@@ -345,7 +364,7 @@ C<secpat>, by default, is C</E<lt>%\s*=+\s*\w+\s*=+\s*%E<gt>/>. So if you put al
 	</body>
 	</html>
 
-You may set C<secpat> to any pattern you wish.	
+You may set C<secpat> to any pattern you wish. Note that if you use delimiters for the section pattern, you will also need to set the C<secpat_delims> parameter to the opening and closing delimiters. This is in the same format as setting the C<delims> parameter below.
 
 The default delimeters for Template::Recall are C<E<lt>%> (opening) and C<%E<gt>> (closing). This tells Template::Recall that C<E<lt>% price %E<gt>> is different from "price" in the same template, e.g.
 
@@ -367,7 +386,7 @@ When you are finished with the template, free up the memory.
 
 =head1 AUTHOR
 
-James Robson E<lt>info F<AT> arbingersys F<DOT> com
+James Robson E<lt>info F<AT> arbingersys F<DOT> comE<gt>
 
 =head1 SEE ALSO
 
