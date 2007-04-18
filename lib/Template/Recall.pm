@@ -6,7 +6,7 @@ use warnings;
 
 use base qw(Template::Recall::Base);
 
-our $VERSION='0.06';
+our $VERSION='0.07';
 
 
 sub new {
@@ -106,19 +106,19 @@ sub new {
 
 sub render {
 
-	my ( $self, $tpattern, %h ) = @_;
+	my ( $self, $tpattern, $href ) = @_;
 
 	# Parameter checks
 	my $np = @_;
 	if ($np < 2) { return "Incorrect number of parameters: $np"; }
 
-	 
+	return "Error: must pass reference to hash\n" if defined($href) and not ref($href);
 
 	# Single file template handling
 
-	if ( $self->{'is_file_template'} and %h )
+	if ( $self->{'is_file_template'} and ref($href) )
 	{
-		return render_file($self, $tpattern, \%h)
+		return render_file($self, $tpattern, $href)
 	}
 	elsif ( $self->{'is_file_template'} ) {			# No tags to replace
 		return render_file($self, $tpattern); 
@@ -132,7 +132,7 @@ sub render {
 
 	if ( defined($self->{'preloaded'}{$tpattern}) ) {
 
-		return $self->SUPER::render( $self->{'preloaded'}{$tpattern}, \%h, $self->{'delims'} );
+		return $self->SUPER::render( $self->{'preloaded'}{$tpattern}, $href, $self->{'delims'} );
 
 	}
 
@@ -154,7 +154,7 @@ sub render {
 		while(<F>) { $t .= $_; }
 		close(F);
 		
-		return $self->SUPER::render( $t, \%h, $self->{'delims'} );
+		return $self->SUPER::render( $t, $href, $self->{'delims'} );
 
 	}
 
@@ -308,7 +308,7 @@ Template::Recall - "Reverse callback" templating system
 		$h{'description'} = $a[1];
 		$h{'price'} = $a[2];
 
-		print $tr->render('prodrow', %h);
+		print $tr->render('prodrow', \%h);
 	}
 
 	# Remove template from memory
@@ -372,9 +372,9 @@ The default delimeters for Template::Recall are C<E<lt>%> (opening) and C<%E<gt>
 
 You can change C<delims> by passing a two element array to C<new()> representing the opening and closing delimiters, such as C<delims =E<gt> [ '(%', '%)' ]>. If you don't want to use delimiters at all, simply set C<delims =E<gt> 'none'>.
 
-=head3 C<render( $template_pattern [, %hash_of_replacements ] );>
+=head3 C<render( $template_pattern [, $reference_to_hash ] );>
 
-You must specify C<$template_pattern>, which tells C<render()> what template "section" to load. C<%hash_of_replacements> is optional. Sometimes you just want to return a template section without any variables. Usually, C<%hash_of_replacements> will be used, and C<render()> iterates through the hash, replacing the F<key> found in the template with the F<value> associated to F<key>.
+You must specify C<$template_pattern>, which tells C<render()> what template "section" to load. C<$reference_to_hash> is optional. Sometimes you just want to return a template section without any variables. Usually, C<$reference_to_hash> will be used, and C<render()> iterates through the hash, replacing the F<key> found in the template with the F<value> associated to F<key>. A reference was chosen for efficiency. The hash may be large, so either pass it using a backslash like in the synopsis, or do something like C<$hash_ref = { 'name' =E<gt> 'value' }> and pass C<$hash_ref>.
 
 =head3 C<preload( $template_pattern );>
 

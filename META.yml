@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                Template-Recall
-version:             0.06
+version:             0.07
 abstract:            "Reverse callback" templating system
 license:             ~
 generated_by:        ExtUtils::MakeMaker version 6.32
