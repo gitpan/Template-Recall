@@ -6,9 +6,11 @@
 # change 'tests => 1' to 'tests => last_test_to_print';
 
 use Test::More tests => 1;
-BEGIN { use_ok('Template::Recall') };
 
-#########################
+use lib './blib/lib';
+use Template::Recall;
 
-# Insert your test code below, the Test::More module is use()ed here so read
-# its man page ( perldoc Test::More ) for help writing this test script.
+my $tr = Template::Recall->new( template_path => 't/.' );
+my $h = { test => 'helowrld' };
+my $s = $tr->render('01tmpl', $h );
+ok( $s ne '', $s );

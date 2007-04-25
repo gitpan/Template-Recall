@@ -1,12 +1,12 @@
 package Template::Recall;
 
-use 5.008008;
+use 5.008001;
 use strict;
 use warnings;
 
 use base qw(Template::Recall::Base);
 
-our $VERSION='0.07';
+our $VERSION='0.08';
 
 
 sub new {
@@ -337,7 +337,7 @@ The C<render()> method is used to "call" out to the template sections. Simply cr
 
 =head3 C<new( [template_path =E<gt> $path ] [, flavor =E<gt> $template_flavor] [, secpat =E<gt> $section_pattern ] [, delims =E<gt> ['opening', 'closing' ] ] )>
 
-Instantiates the object. If you do not specify C<template_path>, it will assume templates are in the diretory that the script lives in. If C<template_path> points to a file rather than a directory, it loads all the template sections from this file. The file must be sectioned using the "section pattern", which can be adjusted via C<secpat>.
+Instantiates the object. If you do not specify C<template_path>, it will assume templates are in the directory that the script lives in. If C<template_path> points to a file rather than a directory, it loads all the template sections from this file. The file must be sectioned using the "section pattern", which can be adjusted via C<secpat>.
 
 C<flavor> is a pattern to specify what type of template to load. This is C</html$|htm$/i> by default, which picks up HTML file extensions. You could set it to C</xml$/i>, for instance, to get *.xml files.
 
@@ -364,7 +364,7 @@ C<secpat>, by default, is C</E<lt>%\s*=+\s*\w+\s*=+\s*%E<gt>/>. So if you put al
 	</body>
 	</html>
 
-You may set C<secpat> to any pattern you wish. Note that if you use delimiters for the section pattern, you will also need to set the C<secpat_delims> parameter to the opening and closing delimiters. This is in the same format as setting the C<delims> parameter below.
+You may set C<secpat> to any pattern you wish. Note that if you use delimiters for the section pattern, you will also need to set the C<secpat_delims> parameter to the opening and closing delimiters. So if you had set C<secpat> to that above, you would need also need to set C<secpat_delims =E<gt> [ 'E<lt>%\s*=+\s*', '\s*=+\s*%E<gt>' ]>. If you decide to not use delimiters, and use something like C<secpat =E<gt> qr/MYTEMPLATE_SECTION_\w+/>, the you must set C<secpat_delims =E<gt> 'no'>.
 
 The default delimeters for Template::Recall are C<E<lt>%> (opening) and C<%E<gt>> (closing). This tells Template::Recall that C<E<lt>% price %E<gt>> is different from "price" in the same template, e.g.
 
