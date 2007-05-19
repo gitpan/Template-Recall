@@ -7,7 +7,7 @@
 
 use Test::More tests => 2;
 
-use lib './blib/lib';
+use lib '../blib/lib';
 use Template::Recall;
 
 

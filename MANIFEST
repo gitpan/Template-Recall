@@ -15,4 +15,5 @@ t/sectioned-file.t
 t/simple-usage.t
 t/switch-flavors.t
 t/Template-Recall.t
+t/template-from-str.t
 META.yml                                 Module meta-data (added by MakeMaker)

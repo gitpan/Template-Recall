@@ -6,7 +6,7 @@ use warnings;
 
 use base qw(Template::Recall::Base);
 
-our $VERSION='0.08';
+our $VERSION='0.09';
 
 
 sub new {
@@ -58,6 +58,14 @@ sub new {
 	# Check the path
 	$self->{'template_path'} = '.' if ( not defined($h{'template_path'}) or !-e $h{'template_path'} );		# Default is local dir
 
+
+	# User supplied the template from a string
+
+	if ( defined($h{'template_str'}) ) {
+		$self->{'template_str'} = $h{'template_str'};
+		$self->init_template_str();
+		return $self;
+	}
 
 
 	# Single file template:
@@ -270,6 +278,20 @@ sub init_file_template {
 
 
 
+# Handle template passed by user as string
+
+sub init_template_str {
+
+	my $self = shift;
+	$self->{'template_secs'} = 
+		[ 
+		split( /($self->{'template_secpat'})/, $self->{'template_str'} ) 
+		];
+
+	shift(@{$self->{'template_secs'}});
+	$self->{'is_file_template'} = 1; # render_file() will process this 
+	
+}
 
 1;
 
@@ -329,9 +351,9 @@ A template section is merely a file on disk (or a "marked" section in a single f
 		<td><%price%></td>
 	</tr>
 
-The C<render()> method is used to "call" out to the template sections. Simply create a hash of name/value pairs that represent the template tags you wish to replace, and pass it along with the template section, i.e.
+The C<render()> method is used to "call" out to the template sections. Simply create a hash of name/value pairs that represent the template tags you wish to replace, and pass a reference of it along with the template section, i.e.
 
-	$tr->render('prodrow', %h);
+	$tr->render('prodrow', \%h);
 
 =head1 METHODS
 
@@ -364,13 +386,19 @@ C<secpat>, by default, is C</E<lt>%\s*=+\s*\w+\s*=+\s*%E<gt>/>. So if you put al
 	</body>
 	</html>
 
-You may set C<secpat> to any pattern you wish. Note that if you use delimiters for the section pattern, you will also need to set the C<secpat_delims> parameter to the opening and closing delimiters. So if you had set C<secpat> to that above, you would need also need to set C<secpat_delims =E<gt> [ 'E<lt>%\s*=+\s*', '\s*=+\s*%E<gt>' ]>. If you decide to not use delimiters, and use something like C<secpat =E<gt> qr/MYTEMPLATE_SECTION_\w+/>, the you must set C<secpat_delims =E<gt> 'no'>.
+You may set C<secpat> to any pattern you wish. Note that if you use delimiters for the section pattern, you will also need to set the C<secpat_delims> parameter to the opening and closing delimiters. So if you had set C<secpat> to that above, you would need also need to set C<secpat_delims =E<gt> [ 'E<lt>%\s*=+\s*', '\s*=+\s*%E<gt>' ]>. If you decide to not use delimiters, and use something like C<secpat =E<gt> qr/MYTEMPLATE_SECTION_\w+/>, then you must set C<secpat_delims =E<gt> 'no'>.
 
 The default delimeters for Template::Recall are C<E<lt>%> (opening) and C<%E<gt>> (closing). This tells Template::Recall that C<E<lt>% price %E<gt>> is different from "price" in the same template, e.g.
 
 	What is the price? It's <% price %>
 
 You can change C<delims> by passing a two element array to C<new()> representing the opening and closing delimiters, such as C<delims =E<gt> [ '(%', '%)' ]>. If you don't want to use delimiters at all, simply set C<delims =E<gt> 'none'>.
+
+The C<template_str> parameter allows you to pass in a string that contains the template data, instead of reading it from disk:
+
+C<new( template_str =E<gt> $str )>
+
+For example, this enables you to store templates in the C<__DATA__> section of the calling script
 
 =head3 C<render( $template_pattern [, $reference_to_hash ] );>
 

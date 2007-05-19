@@ -7,7 +7,7 @@
 
 use Test::More tests => 1;
 
-use lib './blib/lib';
+use lib '../blib/lib';
 use Template::Recall;
 
 my $tr = Template::Recall->new( template_path => 't/.' );

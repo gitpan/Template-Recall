@@ -1,4 +1,4 @@
-Template-Recall version 0.01
+Template-Recall
 ============================
 
 Template::Recall works using a "reverse callback" approach. A "callback" 
