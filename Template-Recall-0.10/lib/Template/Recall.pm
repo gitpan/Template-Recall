@@ -6,7 +6,7 @@ use warnings;
 
 use base qw(Template::Recall::Base);
 
-our $VERSION='0.09';
+our $VERSION='0.10';
 
 
 sub new {
@@ -21,9 +21,9 @@ sub new {
 	# Set default values
 	$self->{'is_file_template'} = 0;
 	$self->{'template_flavor'} = qr/html$|htm$/i;
-	$self->{'template_secpat'} = qr/<%\s*=+\s*\w+\s*=+\s*%>/;		# Section pattern
-	$self->{'secpat_delims'} = [ '<%\s*=+\s*', '\s*=+\s*%>' ];	# Section delimiters
-	$self->{'delims'} = [ '<%', '%>' ];
+	$self->{'template_secpat'} = qr/\[\s*=+\s*\w+\s*=+\s*\]/;		# Section pattern
+	$self->{'secpat_delims'} = [ '[\s*=+\s*', '\s*=+\s*]' ];	# Section delimiters
+	$self->{'delims'} = [ '\[\'', '\'\]' ];
 
 	
 
@@ -307,7 +307,13 @@ Template::Recall - "Reverse callback" templating system
 	
 	use Template::Recall;
 
+	# Load template sections from file
+
 	my $tr = Template::Recall->new( template_path => '/path/to/template/sections' );
+
+	# Or, use single file, with sections marked
+	# my $tr = Template::Recall->new( template_path => '/path/to/template_file.html' );
+
 
 	my @prods = (
 		'soda,sugary goodness,$.99', 
@@ -346,12 +352,12 @@ Template::Recall works using what I call a "reverse callback" approach. A "callb
 A template section is merely a file on disk (or a "marked" section in a single file). For instance, 'prodrow' above (actually F<prodrow.html> in the template directory), might look like
 
 	<tr>
-		<td><% product %></td>
-		<td><% description %></td>
-		<td><%price%></td>
+		<td>[' product ']</td>
+		<td>[' description ']</td>
+		<td>['price']</td>
 	</tr>
 
-The C<render()> method is used to "call" out to the template sections. Simply create a hash of name/value pairs that represent the template tags you wish to replace, and pass a reference of it along with the template section, i.e.
+The C<render()> method is used to "call" back to the template sections. Simply create a hash of name/value pairs that represent the template tags you wish to replace, and pass a reference of it along with the template section, i.e.
 
 	$tr->render('prodrow', \%h);
 
@@ -359,40 +365,49 @@ The C<render()> method is used to "call" out to the template sections. Simply cr
 
 =head3 C<new( [template_path =E<gt> $path ] [, flavor =E<gt> $template_flavor] [, secpat =E<gt> $section_pattern ] [, delims =E<gt> ['opening', 'closing' ] ] )>
 
-Instantiates the object. If you do not specify C<template_path>, it will assume templates are in the directory that the script lives in. If C<template_path> points to a file rather than a directory, it loads all the template sections from this file. The file must be sectioned using the "section pattern", which can be adjusted via C<secpat>.
+Instantiates the object. If you do not specify C<template_path>, it will assume
+templates are in the directory that the script lives in. If C<template_path>
+points to a file rather than a directory, it loads all the template sections
+from this file. The file must be sectioned using the "section pattern", which
+can be adjusted via the C<secpat> parameter.
 
 C<flavor> is a pattern to specify what type of template to load. This is C</html$|htm$/i> by default, which picks up HTML file extensions. You could set it to C</xml$/i>, for instance, to get *.xml files.
 
-C<secpat>, by default, is C</E<lt>%\s*=+\s*\w+\s*=+\s*%E<gt>/>. So if you put all your template sections in one file, the way Template::Recall knows where to get the sections is via this pattern, e.g.
+C<secpat>, by default, is C<[\s*=+\s*\w+\s*=+\s*]/>. So if you put all your template sections in one file, the way Template::Recall knows where to get the sections is via this pattern, e.g.
 
-	<% ==================== header ==================== %>
+	[ ==================== header ==================== ]
 	<html
 		<head><title>Untitled</title></head>
 	<body>
 
 	<table>
 
-	<% ==================== prodrow ==================== %>
+	[ ==================== prodrow ==================== ]
 	<tr>
-		<td><% product %></td>
-		<td><% description %></td>
-		<td><% price %></td>
+		<td>[' product ']</td>
+		<td>[' description ']</td>
+		<td>[' price ']</td>
 	</tr>
 	
-	<% ==================== footer ==================== %>
+	[==================== footer ==================== ]
 	
 	</table>
 
 	</body>
 	</html>
 
-You may set C<secpat> to any pattern you wish. Note that if you use delimiters for the section pattern, you will also need to set the C<secpat_delims> parameter to the opening and closing delimiters. So if you had set C<secpat> to that above, you would need also need to set C<secpat_delims =E<gt> [ 'E<lt>%\s*=+\s*', '\s*=+\s*%E<gt>' ]>. If you decide to not use delimiters, and use something like C<secpat =E<gt> qr/MYTEMPLATE_SECTION_\w+/>, then you must set C<secpat_delims =E<gt> 'no'>.
+You may set C<secpat> to any pattern you wish. Note that if you use delimiters (i.e. opening and closing symbols)
+for the section pattern, you will also need to set the C<secpat_delims>
+parameter to those delimiters. So if you had set C<secpat> to that above, you
+would need also need to set C<secpat_delims =E<gt> [ '[\s*=+\s*', '\s*=+\s*]' ]>. If you decide to not use delimiters, and use something like C<secpat =E<gt> qr/MYTEMPLATE_SECTION_\w+/>, then you must set C<secpat_delims =E<gt> 'no'>.
 
-The default delimeters for Template::Recall are C<E<lt>%> (opening) and C<%E<gt>> (closing). This tells Template::Recall that C<E<lt>% price %E<gt>> is different from "price" in the same template, e.g.
+The default delimeters for variables in Template::Recall are C<['> (opening) and
+C<']> (closing). This tells Template::Recall that C<[' price ']> is different from "price" in the same template, e.g.
 
-	What is the price? It's <% price %>
+	What is the price? It's [' price ']
 
-You can change C<delims> by passing a two element array to C<new()> representing the opening and closing delimiters, such as C<delims =E<gt> [ '(%', '%)' ]>. If you don't want to use delimiters at all, simply set C<delims =E<gt> 'none'>.
+You can change C<delims> by passing a two element array to C<new()> representing
+the opening and closing delimiters, such as C<delims =E<gt> [ 'E<lt>%', '%E<gt>' ]>. If you don't want to use delimiters at all, simply set C<delims =E<gt> 'none'>.
 
 The C<template_str> parameter allows you to pass in a string that contains the template data, instead of reading it from disk:
 

@@ -1,3 +1,0 @@
-<test name="<%test%>">
-	Tag should be replaced by 'helowrld': <% test %>
-</test>

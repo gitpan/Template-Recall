@@ -1,5 +1,9 @@
 ****** Recall.pm ****** 
 ------------------------------------------------------------------------
+r184 | jarobson | 2007-08-24 09:33:04 -0600 (Fri, 24 Aug 2007) | 1 line
+
+Changed default delims from <% and %> to [' and ']. No shift key needed, looks better embedded in HTML docs.
+------------------------------------------------------------------------
 r55 | jarobson | 2007-05-19 14:05:09 -0600 (Sat, 19 May 2007) | 1 line
 
 Updated revision num.
