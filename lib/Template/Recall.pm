@@ -6,7 +6,7 @@ use warnings;
 
 use base qw(Template::Recall::Base);
 
-our $VERSION='0.10';
+our $VERSION='0.11';
 
 
 sub new {
@@ -22,7 +22,7 @@ sub new {
 	$self->{'is_file_template'} = 0;
 	$self->{'template_flavor'} = qr/html$|htm$/i;
 	$self->{'template_secpat'} = qr/\[\s*=+\s*\w+\s*=+\s*\]/;		# Section pattern
-	$self->{'secpat_delims'} = [ '[\s*=+\s*', '\s*=+\s*]' ];	# Section delimiters
+	$self->{'secpat_delims'} = [ '\[\s*=+\s*', '\s*=+\s*\]' ];	# Section delimiters
 	$self->{'delims'} = [ '\[\'', '\'\]' ];
 
 	
@@ -185,7 +185,8 @@ sub render_file {
 
 	if ( ref($self->{'secpat_delims'}) ) {
 		$tpattern = 
-			${$self->{'secpat_delims'}}[0] . $tpattern . ${$self->{'secpat_delims'}}[1];
+			${$self->{'secpat_delims'}}[0] . $tpattern .
+			${$self->{'secpat_delims'}}[1];
 	}
 
 	my @template_secs = @{ $self->{'template_secs'} };
