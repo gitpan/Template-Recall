@@ -4,7 +4,7 @@ use strict;
 no warnings;
 
 
-our $VERSION='0.05'; 
+our $VERSION='0.06'; 
 
 
 sub render {
@@ -30,8 +30,42 @@ sub render {
 	
 	} # if
 
+
+	# Do trimming, if so flagged
+	return trim($class->{'trim'}, $template) if defined($class->{'trim'});
+
+
 	return $template;
 
 } # render()
+
+
+
+
+# Trim output if directed to do so
+
+sub trim {
+	my ($trim, $template) = @_;
+
+	return $template if !defined($trim);
+
+	if ($trim eq 'left' or $trim eq 'l') {
+		$template =~ s/^\s+//g;
+		return $template;
+	}
+
+	if ($trim eq 'right' or $trim eq 'r') {
+		$template =~ s/\s+$//g;
+		return $template;
+	}
+
+	if ($trim eq 'both' or $trim eq 'b') {
+		$template =~ s/^\s+|\s+$//g;
+		return $template;	
+	}
+
+
+} # trim()
+
 
 1;

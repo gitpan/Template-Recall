@@ -6,7 +6,7 @@ use warnings;
 
 use base qw(Template::Recall::Base);
 
-our $VERSION='0.11';
+our $VERSION='0.12';
 
 
 sub new {
@@ -24,7 +24,7 @@ sub new {
 	$self->{'template_secpat'} = qr/\[\s*=+\s*\w+\s*=+\s*\]/;		# Section pattern
 	$self->{'secpat_delims'} = [ '\[\s*=+\s*', '\s*=+\s*\]' ];	# Section delimiters
 	$self->{'delims'} = [ '\[\'', '\'\]' ];
-
+	$self->{'trim'} = undef;	# undef=off
 	
 
 	bless( $self, $class );
@@ -40,10 +40,12 @@ sub new {
 
 
 	# Section: User sets 'no delimiters'
-	$self->{'secpat_delims'} = undef if defined($h{'secpat_delims'}) and !ref($h{'secpat_delims'});
+	$self->{'secpat_delims'} = undef 
+		if defined($h{'secpat_delims'}) and !ref($h{'secpat_delims'});
 		
 	# Section: User specifies delimiters
-	$self->{'secpat_delims'} = [ @{ $h{'secpat_delims'} } ] if defined($h{'secpat_delims'}) and ref($h{'secpat_delims'});
+	$self->{'secpat_delims'} = [ @{ $h{'secpat_delims'} } ] 
+		if defined($h{'secpat_delims'}) and ref($h{'secpat_delims'});
 	
 
 
@@ -51,12 +53,14 @@ sub new {
 	$self->{'delims'} = undef if defined($h{'delims'}) and !ref($h{'delims'});
 		
 	# User specifies delimiters
-	$self->{'delims'} = [ @{ $h{'delims'} } ] if defined($h{'delims'}) and ref($h{'delims'});
+	$self->{'delims'} = [ @{ $h{'delims'} } ] 
+		if defined($h{'delims'}) and ref($h{'delims'});
 
 
 
 	# Check the path
-	$self->{'template_path'} = '.' if ( not defined($h{'template_path'}) or !-e $h{'template_path'} );		# Default is local dir
+	$self->{'template_path'} = '.' 
+		if ( not defined($h{'template_path'}) or !-e $h{'template_path'} );		# Default is local dir
 
 
 	# User supplied the template from a string
@@ -80,7 +84,8 @@ sub new {
 		return $self;
 
 	}
-	elsif ( defined($h{'template_path'}) and -d $h{'template_path'} ) {		# It's a directory
+	elsif ( defined($h{'template_path'}) and -d $h{'template_path'} ) {		
+		# It's a directory
 
 		$self->{'template_path'} = $h{'template_path'};
 
@@ -260,6 +265,42 @@ sub unload {
 
 
 
+# Set trim flags
+sub trim {
+	my ($self, $flag) = @_;
+
+
+
+	# trim() with no params defaults to trimming both ends
+	if (!defined($flag)) {
+		$self->{'trim'} = 'both';
+		return;
+	}
+
+
+	
+	# Turn trimming off
+	if ($flag =~ /^(off|o)$/i) {
+		$self->{'trim'} = undef;
+		return;
+	}
+
+	
+	# Make sure we get something valid
+	if ($flag !~ /^(off|left|right|both|l|r|b|o)$/i) {
+		$self->{'trim'} = undef;
+		return;
+	}
+
+
+	$self->{'trim'} = $flag;
+	return;
+
+
+} # trim()
+
+
+
 
 # Load the single file template into array of sections
 
@@ -427,6 +468,26 @@ In the loop over C<@prods> in the synopsis, the 'prodrow' template is being acce
 =head3 C<unload( $template_pattern );>
 
 When you are finished with the template, free up the memory.
+
+=head3 C<trim( 'off|left|right|both' );>
+
+You may want to control whitespace in your section output. You could use 
+C<s///> on the returned text, of course, but C<trim()>is included for convenience 
+and clarity. Simply pass the directive you want when you call it, e.g.
+
+	$tr->trim('right');
+	print $tr->render('sec1', \%values);
+	$tr->trim('both')
+	print $tr->render('sec2', \%values2);
+	$tr->trim('off');
+	# ...etc...
+
+If you just do
+
+	$tr->trim();
+
+it will default to trimming both ends of the template. Note that you can also
+use abbreviations, i.e. C<$tr-E<gt>trim( 'o|l|r|b' )> to save a few keystrokes.
 
 =head1 AUTHOR
 
