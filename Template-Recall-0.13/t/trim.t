@@ -20,15 +20,20 @@ my $s = $tr->render('sec_hello', { hello => 'helo' } );
 $s .= $tr->render('sec_world', { world => 'wrld' } );
 
 ok( length($s) == 8, "Trim both: [$s]" );
+
 $tr->trim('l');
 $s = $tr->render('sec_hello', { hello => 'helo' } );
-ok( ($s =~ /\n$/ and $s !~ /^\n/), "Trim left ->$s");
+ok( ($s =~ /\s$/ and $s !~ /^\s/), "Trim left");
+
+
 $tr->trim('right');
 $s = $tr->render('sec_world', { world => 'wrld' } );
-ok( ($s !~ /\n$/ and $s =~ /^\n/), "Trim right: $s<- trimmed");
+ok( ($s !~ /\s$/ and $s =~ /^\s/), "Trim right");
+
+
 $tr->trim('OFF');
 $s = $tr->render('sec_world', { world => 'helo' } );
-ok( ($s =~ /\n$/ and $s =~ /^\n/), "Trim off: $s");
+ok( ($s =~ /\s$/ and $s =~ /^\s/), "Trim off");
 
 
 
