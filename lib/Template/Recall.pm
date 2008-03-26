@@ -6,7 +6,7 @@ use warnings;
 
 use base qw(Template::Recall::Base);
 
-our $VERSION='0.13';
+our $VERSION='0.14';
 
 
 sub new {
@@ -24,7 +24,8 @@ sub new {
 	$self->{'template_secpat'} = qr/\[\s*=+\s*\w+\s*=+\s*\]/;		# Section pattern
 	$self->{'secpat_delims'} = [ '\[\s*=+\s*', '\s*=+\s*\]' ];	# Section delimiters
 	$self->{'delims'} = [ '\[\'', '\'\]' ];
-	$self->{'trim'} = undef;	# undef=off
+	$self->{'trim'} = undef;		# undef=off
+	$self->{'stored_secs'} = {};	# Store rendered sections internally
 	
 
 	bless( $self, $class );
@@ -119,23 +120,70 @@ sub new {
 
 sub render {
 
-	my ( $self, $tpattern, $href ) = @_;
+	my $self = shift;
+	my $tpattern = shift;
+	my $href = shift; # Check this for storage directive below
 
-	# Parameter checks
-	my $np = @_;
-	if ($np < 2) { return "Incorrect number of parameters: $np"; }
 
-	return "Error: must pass reference to hash\n" if defined($href) and not ref($href);
+	return "Error: no section to render: $tpattern\n" if !defined($tpattern);
+
+
+	# Check for store/append flag
+	my $stor = undef;
+	if ( (!ref($href)) and $href =~ /a|s/ ) {
+		$stor = $href;
+		$href = shift; # The next parameter must be the hashref
+	}
+
+	return "Error: must pass reference to hash\n" if defined($href) and !ref($href);
+
+
+
 
 	# Single file template handling
 
 	if ( $self->{'is_file_template'} and ref($href) )
 	{
-		return render_file($self, $tpattern, $href)
+		
+		# Save sections internally
+		if ( defined($stor) and $stor eq 'a' ) { # Append
+			${$self->{'stored_secs'}}{$tpattern} .= 
+				render_file($self, $tpattern, $href);
+			return;
+		}
+
+
+		if ( defined($stor) and $stor eq 's' ) { # Overwrite
+			${$self->{'stored_secs'}}{$tpattern} = 
+				render_file($self, $tpattern, $href);
+			return;
+		}
+
+
+		# Otherwise, return value to calling code
+		return render_file($self, $tpattern, $href);
+		
 	}
 	elsif ( $self->{'is_file_template'} ) {			# No tags to replace
+
+		# Save sections internally
+		if ( defined($stor) and $stor eq 'a' ) { # Append
+			${$self->{'stored_secs'}}{$tpattern} .= render_file($self, $tpattern);
+			return;
+		}
+
+		if ( defined($stor) and $stor eq 's' ) { # Overwrite
+			${$self->{'stored_secs'}}{$tpattern} = render_file($self, $tpattern);
+			return;
+		}
+		
 		return render_file($self, $tpattern); 
 	}
+
+
+
+
+
 
 
 	# Multiple file template handling
@@ -145,9 +193,33 @@ sub render {
 
 	if ( defined($self->{'preloaded'}{$tpattern}) ) {
 
-		return $self->SUPER::render( $self->{'preloaded'}{$tpattern}, $href, $self->{'delims'} );
+
+		# Save section internally
+		if ( defined($stor) and $stor eq 'a' ) { # Append
+			
+			${$self->{'stored_secs'}}{$tpattern} .=  
+				$self->SUPER::render( 
+					$self->{'preloaded'}{$tpattern}, $href, $self->{'delims'} );
+			return;
+		}
+
+
+		# Overwrite
+		if ( defined($stor) and $stor eq 's' ) { 
+			${$self->{'stored_secs'}}{$tpattern} =  
+				$self->SUPER::render( 
+					$self->{'preloaded'}{$tpattern}, $href, $self->{'delims'} );		
+			return;
+		}
+
+
+		# Return value
+		return $self->SUPER::render( 
+			$self->{'preloaded'}{$tpattern}, $href, $self->{'delims'} );
 
 	}
+
+
 
 
 
@@ -166,7 +238,23 @@ sub render {
 		open(F, $file) or die "Couldn't open $file $!";
 		while(<F>) { $t .= $_; }
 		close(F);
-		
+
+
+		# Save section internally
+		if ( defined($stor) and $stor eq 'a' ) { # Append
+			${$self->{'stored_secs'}}{$t} .=  
+				$self->SUPER::render( $t, $href, $self->{'delims'} );
+			return;
+		}
+
+		# Overwrite
+		if ( defined($stor) and $stor eq 's' ) { 
+			${$self->{'stored_secs'}}{$t} =  
+				$self->SUPER::render( $t, $href, $self->{'delims'} );
+			return;
+		}		
+
+		# Otherwise...
 		return $self->SUPER::render( $t, $href, $self->{'delims'} );
 
 	}
@@ -265,6 +353,47 @@ sub unload {
 
 
 
+
+# Load the single file template into array of sections
+
+sub init_file_template {
+
+	my $self = shift;
+
+	my $t;
+	open(F, $self->{'template_path'}) or die "Couldn't open $self->{'template_path'} $!";
+	while(<F>) { $t .= $_; }
+	close(F);
+
+	$self->{'template_secs'} = [ split( /($self->{'template_secpat'})/, $t ) ];
+
+
+} # init_file_template()
+
+
+
+
+
+# Handle template passed by user as string
+
+sub init_template_str {
+
+	my $self = shift;
+	$self->{'template_secs'} = 
+		[ 
+		split( /($self->{'template_secpat'})/, $self->{'template_str'} ) 
+		];
+
+	shift(@{$self->{'template_secs'}});
+	$self->{'is_file_template'} = 1; # render_file() will process this 
+	
+}
+
+
+
+
+
+
 # Set trim flags
 sub trim {
 	my ($self, $flag) = @_;
@@ -302,38 +431,31 @@ sub trim {
 
 
 
-# Load the single file template into array of sections
 
-sub init_file_template {
-
+sub assemble {
 	my $self = shift;
+	my $aref = shift;
+	my $clear = shift;
 
-	my $t;
-	open(F, $self->{'template_path'}) or die "Couldn't open $self->{'template_path'} $!";
-	while(<F>) { $t .= $_; }
-	close(F);
+	# Make sure we get an array reference
+	return if !ref($aref);
 
-	$self->{'template_secs'} = [ split( /($self->{'template_secpat'})/, $t ) ];
+	# Must not be empty
+	return if !keys %{ $self->{'stored_secs'} };
+
+	my $ret;
+	for (@{$aref}) {
+		$ret .= ${ $self->{'stored_secs'} }{$_};
+	}
+
+	# Clear the hash
+	$self->{'stored_secs'} = {} if defined($clear);
+
+	return $ret;
+} # assemble()
 
 
-} # init_file_template()
 
-
-
-# Handle template passed by user as string
-
-sub init_template_str {
-
-	my $self = shift;
-	$self->{'template_secs'} = 
-		[ 
-		split( /($self->{'template_secpat'})/, $self->{'template_str'} ) 
-		];
-
-	shift(@{$self->{'template_secs'}});
-	$self->{'is_file_template'} = 1; # render_file() will process this 
-	
-}
 
 1;
 
@@ -405,7 +527,7 @@ The C<render()> method is used to "call" back to the template sections. Simply c
 
 =head1 METHODS
 
-=head3 C<new( [template_path =E<gt> $path ] [, flavor =E<gt> $template_flavor] [, secpat =E<gt> $section_pattern ] [, delims =E<gt> ['opening', 'closing' ] ] )>
+=head3 C<new( [ template_path =E<gt> $path, flavor =E<gt> $template_flavor, secpat =E<gt> $section_pattern, delims =E<gt> ['opening', 'closing'] ] )>
 
 Instantiates the object. If you do not specify C<template_path>, it will assume
 templates are in the directory that the script lives in. If C<template_path>
@@ -457,9 +579,29 @@ C<new( template_str =E<gt> $str )>
 
 For example, this enables you to store templates in the C<__DATA__> section of the calling script
 
-=head3 C<render( $template_pattern [, $reference_to_hash ] );>
+=head3 C<render( $template_pattern [, $store, $reference_to_hash ] );>
 
 You must specify C<$template_pattern>, which tells C<render()> what template "section" to load. C<$reference_to_hash> is optional. Sometimes you just want to return a template section without any variables. Usually, C<$reference_to_hash> will be used, and C<render()> iterates through the hash, replacing the F<key> found in the template with the F<value> associated to F<key>. A reference was chosen for efficiency. The hash may be large, so either pass it using a backslash like in the synopsis, or do something like C<$hash_ref = { 'name' =E<gt> 'value' }> and pass C<$hash_ref>.
+
+The other optional argument C<$store> must either be the string "a" or the
+string "s", for "append" or "store", respectively. This tells C<render()> that
+you want the rendered section to internal storage, until the call to
+C<assemble()> is made (see below). It's not always expedient to render a section
+immediately when you invoke C<render()>. Here's how to save the rows from the
+synopsis loop above:
+
+        for (@prods) 
+        {
+            # ... etc ...
+
+            $tr->render('prodrow', 'a', \%h);
+        }
+
+To replace an internally rendered section instead of appending to it, change "a" to "s":
+
+        $tr->render('section', 's', \%h);
+
+Use C<assemble()> below to arrange the sections you want and output.
 
 =head3 C<preload( $template_pattern );>
 
@@ -488,6 +630,27 @@ If you just do
 
 it will default to trimming both ends of the template. Note that you can also
 use abbreviations, i.e. C<$tr-E<gt>trim( 'o|l|r|b' )> to save a few keystrokes.
+
+=head3 C<assemble( $array_ref [, 'clear'] )>
+
+If you have stored any sections internally using the "a" or "s" directives to
+C<render()>, this method is used to return those sections. Pass in a reference
+to an array that contains the section names you want returned, e.g.
+
+	print $tr->assemble( [ 'section1', 'section2', 'section3' ] );
+
+This also gives you some flexibility, for instance, you could just as easily
+reverse the sections like
+
+	print $tr->assemble( [ 'section3', 'section2', 'section1' ] );
+
+Since internal storage causes memory to be used, you will probably at some point
+want to remove all the stored sections. Do this with the C<'clear'> parameter.
+For instance,
+
+	print $tr->assemble( [ 'section1', 'section2' ], 'clear' );
+
+will return the sections, and immediately remove them from internal storage.
 
 =head1 AUTHOR
 

@@ -5,9 +5,7 @@ use ExtUtils::MakeMaker;
 WriteMakefile(
     NAME              => 'Template::Recall',
     VERSION_FROM      => 'lib/Template/Recall.pm', # finds $VERSION
-	dist => {
-		TARFLAGS => '--create --verbose --file=$(DISTVNAME).tar --mode=a+x'
-	},
+	dist => {}, #{TARFLAGS => '--create --verbose --mode=a+x'},
     PREREQ_PM         => {}, # e.g., Module::Name => 1.1
     ($] >= 5.005 ?     ## Add these new keywords supported since 5.005
       (ABSTRACT_FROM  => 'lib/Template/Recall.pm', # retrieve abstract from module

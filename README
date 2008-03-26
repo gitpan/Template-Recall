@@ -15,7 +15,7 @@ sections. Simply create a hash of name/value pairs that represent the
 template tags you wish to replace, and pass it along with the template 
 section, i.e.
 
-        $tr->render('prodrow', %h);
+        $tr->render('prodrow', \%h);
 
 
 INSTALLATION

@@ -17,4 +17,5 @@ t/switch-flavors.t
 t/Template-Recall.t
 t/template-from-str.t
 t/trim.t
+t/assemble.t
 META.yml                                 Module meta-data (added by MakeMaker)
