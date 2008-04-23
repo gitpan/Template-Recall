@@ -6,7 +6,7 @@ use warnings;
 
 use base qw(Template::Recall::Base);
 
-our $VERSION='0.14';
+our $VERSION='0.15';
 
 
 sub new {
@@ -130,7 +130,7 @@ sub render {
 
 	# Check for store/append flag
 	my $stor = undef;
-	if ( (!ref($href)) and $href =~ /a|s/ ) {
+	if ( $href and !ref($href) and $href =~ /a|s/ ) {
 		$stor = $href;
 		$href = shift; # The next parameter must be the hashref
 	}
