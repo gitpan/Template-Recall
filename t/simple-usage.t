@@ -10,7 +10,7 @@ use Test::More tests => 1;
 use lib '../blib/lib';
 use Template::Recall;
 
-my $tr = Template::Recall->new( template_path => 't/.' );
+my $tr = Template::Recall->new( template_path => 't/01tmpl.html' );
 my $h = { test => 'helowrld' };
-my $s = $tr->render('01tmpl', $h );
+my $s = $tr->render('main', $h );
 ok( $s ne '', $s );

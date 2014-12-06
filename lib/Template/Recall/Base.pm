@@ -4,30 +4,30 @@ use strict;
 no warnings;
 
 
-our $VERSION='0.06'; 
+our $VERSION='0.07';
 
 
 sub render {
 
 	my ( $class, $template, $hash_ref, $delims ) = @_;
 
-	if ( not defined ($template) ) { return "Template::Recall::Base::render() 'template' parameter not present"; }
+	if ( not defined ($template) ) {
+        return "Template::Recall::Base::render() 'template' parameter not present";
+    }
 
+    my $user_delims = ref($delims) && $#{$delims} == 1 ?  1 : 0;
 	if ( ref($hash_ref) ) {
 
-		foreach my $k ( keys %{$hash_ref} ) {
+        while ( my ($key, $value) = each %$hash_ref) {
+            if ( $user_delims ) {
+                my $d = $delims->[0] . '\s*' . $key . '\s*' . $delims->[1];
+				$template =~ s/$d/$value/g;
+            }
+            else { # exactly specified delims
+				$template =~ s/$key/$value/g;
+            }
+        } # while
 
-			# $delims must be 2 element array reference
-			if ( ref($delims) and $#{$delims} == 1 ) {	
-				my $r = ${$delims}[0] . '\s*' . $k . '\s*' . ${$delims}[1];
-				$template =~ s/$r/${$hash_ref}{$k}/g;
-			}
-			else {
-				$template =~ s/$k/${$hash_ref}{$k}/g;
-			}
-			
-		} # foreach
-	
 	} # if
 
 
@@ -61,7 +61,7 @@ sub trim {
 
 	if ($trim eq 'both' or $trim eq 'b') {
 		$template =~ s/^\s+|\s+$//g;
-		return $template;	
+		return $template;
 	}
 
 

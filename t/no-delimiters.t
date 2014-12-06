@@ -5,20 +5,10 @@
 
 # change 'tests => 1' to 'tests => last_test_to_print';
 
-use Test::More tests => 2;
+use Test::More tests => 1;
 
 use lib '../blib/lib';
 use Template::Recall;
-
-
-# Section file templates
-
-my $tr = Template::Recall->new( template_path => 't/.', delims => 'none' );
-my $h = { TEMPLATE_VAR_test => 'helowrld' };
-my $s = $tr->render('03tmpl', $h );
-
-ok( $s ne '', "Section file templates: $s" );
-
 
 
 
