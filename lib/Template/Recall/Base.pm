@@ -4,7 +4,7 @@ use strict;
 no warnings;
 
 
-our $VERSION='0.07';
+our $VERSION='0.08';
 
 
 sub render {
@@ -12,11 +12,12 @@ sub render {
 	my ( $class, $template, $hash_ref, $delims ) = @_;
 
 	if ( not defined ($template) ) {
-        return "Template::Recall::Base::render() 'template' parameter not present";
+        die "Template::Recall::Base::render() 'template' parameter not present";
     }
 
-    my $user_delims = ref($delims) && $#{$delims} == 1 ?  1 : 0;
-	if ( ref($hash_ref) ) {
+    my $user_delims = ref $delims && $#{$delims} == 1 ?  1 : 0;
+
+	if (ref $hash_ref) {
 
         while ( my ($key, $value) = each %$hash_ref) {
             if ( $user_delims ) {
@@ -32,8 +33,7 @@ sub render {
 
 
 	# Do trimming, if so flagged
-	return trim($class->{'trim'}, $template) if defined($class->{'trim'});
-
+	return trim($class->{'trim'}, $template) if defined $class->{'trim'};
 
 	return $template;
 
@@ -42,7 +42,7 @@ sub render {
 
 
 
-# Trim output if directed to do so
+# Trim output if specified
 
 sub trim {
 	my ($trim, $template) = @_;
@@ -64,8 +64,6 @@ sub trim {
 		return $template;
 	}
 
-
 } # trim()
-
 
 1;

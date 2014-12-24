@@ -17,7 +17,7 @@ for (<DATA>) { $tstr .= $_ }
 my $tr = Template::Recall->new( template_str => $tstr );
 my $h = { filename => $0 };
 my $s = $tr->render('main', $h );
-ok( $s ne '', "From __DATA__ section:\n$s" );
+ok( $s ne '' and $s !~ /filename/, "From __DATA__ section:\n$s" );
 
 
 

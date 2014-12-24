@@ -5,12 +5,17 @@
 
 # change 'tests => 1' to 'tests => last_test_to_print';
 
-use Test::More tests => 1;
+use Test::More tests => 2;
 
 use lib '../blib/lib';
 use Template::Recall;
 
-my $tr = Template::Recall->new( template_path => 't/01tmpl.html' );
+my $tr = Template::Recall->new( template_path => 't/1.htmt' );
 my $h = { test => 'helowrld' };
 my $s = $tr->render('main', $h );
-ok( $s ne '', $s );
+ok( $s ne '' and $s !~ /test/ );
+print $s;
+
+$s = $tr->render('sec2', { test => 'helowrld' });
+ok ($s =~ /helowrld/);
+print $s;
