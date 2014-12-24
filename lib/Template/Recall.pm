@@ -7,7 +7,7 @@ use warnings;
 use base qw(Template::Recall::Base);
 
 # This version: only single file template or template string
-our $VERSION='0.19';
+our $VERSION='0.21';
 
 
 sub new {
